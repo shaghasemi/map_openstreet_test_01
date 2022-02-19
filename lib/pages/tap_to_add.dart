@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-// import 'package:latlong/latlong.dart';
+import 'package:map_openstreet_test_01/service/api_service_neshan.dart';
+import 'package:map_openstreet_test_01/service/geo_reverse_model.dart';
 
+// import 'package:latlong/latlong.dart';
 import '../widgets/drawer.dart';
 
 class TapToAddPage extends StatefulWidget {
@@ -17,7 +22,11 @@ class TapToAddPage extends StatefulWidget {
 class TapToAddPageState extends State<TapToAddPage> {
   List<LatLng> tappedPoints = [];
   LatLng latlng = LatLng(45.5231, -122.6765);
-  MapController _mapController = MapController();
+  final MapController _mapController = MapController();
+  final GeolocatorPlatform geolocatorAndroid = GeolocatorPlatform.instance;
+  final List<_PositionItem> _positionItems = <_PositionItem>[];
+  final ApiServiceNeshan _apiServiceNeshan = ApiServiceNeshan();
+  GeoReverseModelRequest _request = GeoReverseModelRequest();
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +52,12 @@ class TapToAddPageState extends State<TapToAddPage> {
             ),
             Flexible(
               child: FlutterMap(
+                mapController: _mapController,
                 options: MapOptions(
                   center: LatLng(45.5231, -122.6765),
                   zoom: 13.0,
                   onTap: _handleTap,
-                  controller: _mapController,
+                  // controller: _mapController,
                 ),
                 layers: [
                   TileLayerOptions(
@@ -60,6 +70,16 @@ class TapToAddPageState extends State<TapToAddPage> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            child: const Icon(Icons.my_location),
+            onPressed: _getCurrentPosition,
+          ),
+        ],
       ),
     );
   }
@@ -74,4 +94,52 @@ class TapToAddPageState extends State<TapToAddPage> {
       _mapController.move(LatLng(45.5231, -122.6765), 8);
     });
   }
+
+  Future<void> _getCurrentPosition() async {
+    /*final hasPermission = await _handlePermission();
+
+    if (!hasPermission) {
+      return;
+    }*/
+
+    print("Print Current 2:");
+    final position = await geolocatorAndroid.getCurrentPosition();
+    print("Print Current 2: ${position}");
+    _request.lng = position.longitude;
+    _request.lat = position.latitude;
+
+    setState(() {
+      _mapController.move(LatLng(position.latitude, position.longitude), 16);
+      _apiServiceNeshan.geoReverse(_request).then((value) {
+        // print("Print Geo Info 0: ${jsonEncode(value)}");
+        print("Print Geo Info 1: ${value.state}");
+        print("Print Geo Info 2: ${value.city}");
+      });
+      // mapController.move(dublin, 5.0);
+    });
+    _updatePositionList(
+      _PositionItemType.position,
+      position.toString(),
+    );
+  }
+
+  void _updatePositionList(_PositionItemType type, String displayValue) {
+    _positionItems.add(_PositionItem(type, displayValue));
+    /*print("Print Current 2: ${position}");
+    setState(() {
+      mapController.move(dublin, 5.0);
+    });*/
+  }
+}
+
+enum _PositionItemType {
+  log,
+  position,
+}
+
+class _PositionItem {
+  _PositionItem(this.type, this.displayValue);
+
+  final _PositionItemType type;
+  final String displayValue;
 }

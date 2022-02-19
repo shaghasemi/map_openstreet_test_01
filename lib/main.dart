@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import './pages/animated_map_controller.dart';
 import './pages/circle.dart';
 import './pages/esri.dart';
@@ -15,8 +14,14 @@ import './pages/plugin_api.dart';
 import './pages/plugin_scalebar.dart';
 import './pages/polyline.dart';
 import './pages/tap_to_add.dart';
+import 'widgets/map_states.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  return runApp(
+    MyApp(),
+  );
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+
 // import 'package:latlong/latlong.dart';
 import '../widgets/drawer.dart';
 
@@ -21,6 +23,9 @@ class MapControllerPageState extends State<MapControllerPage> {
 
   late MapController mapController;
   double rotation = 0.0;
+
+  final GeolocatorPlatform geolocatorAndroid = GeolocatorPlatform.instance;
+  final List<_PositionItem> _positionItems = <_PositionItem>[];
 
   @override
   void initState() {
@@ -85,9 +90,16 @@ class MapControllerPageState extends State<MapControllerPage> {
                       mapController.move(paris, 5.0);
                     },
                   ),
-                  MaterialButton(
+                  /*MaterialButton(
                     child: const Text('Dublin'),
                     onPressed: () {
+                      mapController.move(dublin, 5.0);
+                    },
+                  ),*/
+                  MaterialButton(
+                    child: const Text('Current'),
+                    onPressed: () {
+                      _getCurrentPosition();
                       mapController.move(dublin, 5.0);
                     },
                   ),
@@ -169,4 +181,43 @@ class MapControllerPageState extends State<MapControllerPage> {
       ),
     );
   }
+
+  Future<void> _getCurrentPosition() async {
+    /*final hasPermission = await _handlePermission();
+
+    if (!hasPermission) {
+      return;
+    }*/
+
+    final position = await geolocatorAndroid.getCurrentPosition();
+    print("Print Current 2: ${position}");
+    setState(() {
+      mapController.move(LatLng(position.latitude,position.longitude),4);
+      // mapController.move(dublin, 5.0);
+    });
+    _updatePositionList(
+      _PositionItemType.position,
+      position.toString(),
+    );
+  }
+
+  void _updatePositionList(_PositionItemType type, String displayValue) {
+    _positionItems.add(_PositionItem(type, displayValue));
+    /*print("Print Current 2: ${position}");
+    setState(() {
+      mapController.move(dublin, 5.0);
+    });*/
+  }
+}
+
+enum _PositionItemType {
+  log,
+  position,
+}
+
+class _PositionItem {
+  _PositionItem(this.type, this.displayValue);
+
+  final _PositionItemType type;
+  final String displayValue;
 }
